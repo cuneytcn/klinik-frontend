@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://kiymetveteriner.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Disallow admin or sensitive areas (if any in future)
+# Disallow: /admin/
+# Disallow: /private/

@@ -1,0 +1,24 @@
+@import url("https://fonts.googleapis.com/css2?family=Michroma&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import "tailwindcss";
+
+:root {
+  --font-michroma: "Michroma", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+}
+
+@theme inline {
+  --font-primary: var(--font-montserrat);
+  --font-secondary: var(--font-michroma);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply outline-none;
+  }
+
+  body {
+    @apply font-primary flex min-h-dvh w-full flex-col items-center justify-between antialiased;
+  }
+}

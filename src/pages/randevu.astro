@@ -1,0 +1,530 @@
+---
+import BaseLayout from "../layouts/base-layout.astro";
+---
+
+<BaseLayout
+  title="Randevu Al - Kıymet Veteriner Kliniği | İzmir Bornova"
+  description="Kıymet Veteriner Kliniği'nden online randevu alın. İzmir Bornova'da evcil dostlarınız için hızlı ve kolay randevu sistemi."
+  keywords="veteriner randevu İzmir, Bornova veteriner appointment, online randevu, Kıymet Veteriner randevu"
+>
+  <main class="pt-20">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-sky-50 to-white py-20">
+      <div class="container mx-auto px-4 lg:px-6">
+        <div class="mb-16 text-center">
+          <h1 class="mb-6 text-5xl font-bold text-gray-900">Randevu Al</h1>
+          <p class="mx-auto max-w-3xl text-xl text-gray-600">
+            Kıymet Veteriner Kliniği'nde evcil dostunuz için kolayca online
+            randevu oluşturun
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Appointment Form -->
+    <section class="py-20">
+      <div class="container mx-auto px-4 lg:px-6">
+        <div class="mx-auto max-w-4xl">
+          <div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
+            <!-- Form -->
+            <div class="lg:col-span-2">
+              <div class="rounded-3xl bg-white p-8 shadow-lg">
+                <h2 class="mb-8 text-3xl font-bold text-gray-900">
+                  Randevu Formu
+                </h2>
+
+                <form class="space-y-8" x-data="appointmentForm()">
+                  <!-- Pet Owner Information -->
+                  <div>
+                    <h3
+                      class="mb-6 flex items-center text-xl font-semibold text-gray-900"
+                    >
+                      <svg
+                        class="mr-2 h-5 w-5 text-sky-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        ></path>
+                      </svg>
+                      Sahip Bilgileri
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <label
+                          for="ownerName"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Ad Soyad *
+                        </label>
+                        <input
+                          type="text"
+                          id="ownerName"
+                          name="ownerName"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="Adınız ve Soyadınız"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="phone"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Telefon Numarası *
+                        </label>
+                        <input
+                          type="tel"
+                          id="phone"
+                          name="phone"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="+90 5xx xxx xx xx"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="email"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          E-posta Adresi *
+                        </label>
+                        <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="ornek@email.com"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="address"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Adres
+                        </label>
+                        <input
+                          type="text"
+                          id="address"
+                          name="address"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="Adresiniz"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Pet Information -->
+                  <div>
+                    <h3
+                      class="mb-6 flex items-center text-xl font-semibold text-gray-900"
+                    >
+                      <svg
+                        class="mr-2 h-5 w-5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        ></path>
+                      </svg>
+                      Evcil Hayvan Bilgileri
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <label
+                          for="petName"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Hayvan Adı *
+                        </label>
+                        <input
+                          type="text"
+                          id="petName"
+                          name="petName"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="Evcil hayvanınızın adı"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="petType"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Hayvan Türü *
+                        </label>
+                        <select
+                          id="petType"
+                          name="petType"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                        >
+                          <option value="">Seçiniz</option>
+                          <option value="dog">Köpek</option>
+                          <option value="cat">Kedi</option>
+                          <option value="bird">Kuş</option>
+                          <option value="rabbit">Tavşan</option>
+                          <option value="hamster">Hamster</option>
+                          <option value="other">Diğer</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          for="petBreed"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Irk
+                        </label>
+                        <input
+                          type="text"
+                          id="petBreed"
+                          name="petBreed"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="Hayvan ırkı"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="petAge"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Yaş
+                        </label>
+                        <input
+                          type="text"
+                          id="petAge"
+                          name="petAge"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                          placeholder="Örn: 2 yaş, 6 aylık"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Appointment Details -->
+                  <div>
+                    <h3
+                      class="mb-6 flex items-center text-xl font-semibold text-gray-900"
+                    >
+                      <svg
+                        class="mr-2 h-5 w-5 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                      Randevu Detayları
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <label
+                          for="service"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Hizmet Türü *
+                        </label>
+                        <select
+                          id="service"
+                          name="service"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                        >
+                          <option value="">Seçiniz</option>
+                          <option value="checkup">Genel Muayene</option>
+                          <option value="vaccination">Aşı</option>
+                          <option value="surgery">Cerrahi İşlem</option>
+                          <option value="dental">Diş Bakımı</option>
+                          <option value="grooming">Tıraş/Bakım</option>
+                          <option value="laboratory">Laboratuvar</option>
+                          <option value="emergency">Acil Durum</option>
+                          <option value="other">Diğer</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          for="preferredDate"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Tercih Edilen Tarih *
+                        </label>
+                        <input
+                          type="date"
+                          id="preferredDate"
+                          name="preferredDate"
+                          required
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="preferredTime"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Tercih Edilen Saat
+                        </label>
+                        <select
+                          id="preferredTime"
+                          name="preferredTime"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                        >
+                          <option value="">Seçiniz</option>
+                          <option value="09:00">09:00</option>
+                          <option value="10:00">10:00</option>
+                          <option value="11:00">11:00</option>
+                          <option value="12:00">12:00</option>
+                          <option value="13:00">13:00</option>
+                          <option value="14:00">14:00</option>
+                          <option value="15:00">15:00</option>
+                          <option value="16:00">16:00</option>
+                          <option value="17:00">17:00</option>
+                          <option value="18:00">18:00</option>
+                          <option value="19:00">19:00</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          for="doctor"
+                          class="mb-2 block text-sm font-semibold text-gray-700"
+                        >
+                          Doktor Tercihi
+                        </label>
+                        <select
+                          id="doctor"
+                          name="doctor"
+                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                        >
+                          <option value="">Doktor tercihi yok</option>
+                          <option value="dr-ayse-demir">Dr. Ayşe Demir</option>
+                          <option value="dr-mehmet-kaya">Dr. Mehmet Kaya</option
+                          >
+                          <option value="dr-zeynep-yilmaz"
+                            >Dr. Zeynep Yılmaz</option
+                          >
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Additional Notes -->
+                  <div>
+                    <label
+                      for="notes"
+                      class="mb-2 block text-sm font-semibold text-gray-700"
+                    >
+                      Ek Notlar / Şikayetler
+                    </label>
+                    <textarea
+                      id="notes"
+                      name="notes"
+                      rows="4"
+                      class="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
+                      placeholder="Hayvanınızın durumu, şikayetler veya özel notlar..."
+                    ></textarea>
+                  </div>
+
+                  <!-- Privacy Policy -->
+                  <div class="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      id="privacy"
+                      name="privacy"
+                      required
+                      class="mt-1 h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    <label for="privacy" class="text-sm text-gray-600">
+                      <a
+                        href="/gizlilik-politikasi"
+                        class="text-sky-600 hover:text-sky-700"
+                        >Gizlilik Politikası</a
+                      >'nı okudum, kabul ediyorum ve kişisel verilerimin
+                      işlenmesine onay veriyorum. *
+                    </label>
+                  </div>
+
+                  <!-- Submit Button -->
+                  <button
+                    type="submit"
+                    class="w-full rounded-xl bg-sky-600 px-6 py-4 font-semibold text-white shadow-lg transition-colors duration-200 hover:bg-sky-700 hover:shadow-xl"
+                  >
+                    Randevu Talebimi Gönder
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+              <!-- Working Hours -->
+              <div class="rounded-3xl bg-white p-6 shadow-lg">
+                <h3
+                  class="mb-4 flex items-center text-xl font-bold text-gray-900"
+                >
+                  <svg
+                    class="mr-2 h-5 w-5 text-sky-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Çalışma Saatleri
+                </h3>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Pazartesi - Cumartesi</span>
+                    <span class="font-semibold">09:00 - 21:00</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Pazar</span>
+                    <span class="font-semibold">12:00 - 17:00</span>
+                  </div>
+                  <div class="mt-2 border-t pt-2">
+                    <div class="flex justify-between">
+                      <span class="font-semibold text-red-600">Acil Durum</span>
+                      <span class="font-semibold text-red-600">7/24</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Emergency Contact -->
+              <div
+                class="rounded-3xl bg-gradient-to-r from-red-500 to-red-600 p-6 text-white"
+              >
+                <h3 class="mb-2 text-xl font-bold">Acil Durum?</h3>
+                <p class="mb-4 text-sm opacity-90">
+                  Hayvanınızın durumu acil ise direkt arayın
+                </p>
+                <a
+                  href="tel:+905551234567"
+                  class="flex items-center justify-center rounded-xl bg-white px-4 py-3 font-bold text-red-600 transition-colors hover:bg-gray-100"
+                >
+                  <svg
+                    class="mr-2 h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    ></path>
+                  </svg>
+                  Hemen Ara
+                </a>
+              </div>
+
+              <!-- Tips -->
+              <div class="rounded-3xl bg-sky-50 p-6">
+                <h3 class="mb-4 text-xl font-bold text-gray-900">
+                  Randevu İpuçları
+                </h3>
+                <ul class="space-y-3 text-sm text-gray-600">
+                  <li class="flex items-start space-x-2">
+                    <svg
+                      class="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span>Randevunuzdan 15 dakika önce gelin</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <svg
+                      class="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span>Evcil hayvanınızın aşı karnesini getirin</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <svg
+                      class="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span>Önceki tedavi kayıtlarını bulundurun</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <svg
+                      class="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span>Hayvanınızı sakinleştirin</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function appointmentForm() {
+      return {
+        // Form validation and submission logic can be added here
+      };
+    }
+  </script>
+</BaseLayout>
