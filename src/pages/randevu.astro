@@ -1,5 +1,9 @@
 ---
 import BaseLayout from "../layouts/base-layout.astro";
+
+// Environment variables'ları server-side'da al
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 ---
 
 <BaseLayout
@@ -33,7 +37,7 @@ import BaseLayout from "../layouts/base-layout.astro";
                   Randevu Formu
                 </h2>
 
-                <form class="space-y-8" x-data="appointmentForm()">
+                <form id="appointment-form" class="space-y-8">
                   <!-- Pet Owner Information -->
                   <div>
                     <h3
@@ -276,52 +280,27 @@ import BaseLayout from "../layouts/base-layout.astro";
                           class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
                         />
                       </div>
-                      <div>
+                      <div class="md:col-span-2">
                         <label
                           for="preferredTime"
                           class="mb-2 block text-sm font-semibold text-gray-700"
                         >
-                          Tercih Edilen Saat
+                          Tercih Edilen Saat *
                         </label>
                         <select
                           id="preferredTime"
                           name="preferredTime"
+                          required
                           class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
                         >
-                          <option value="">Seçiniz</option>
-                          <option value="09:00">09:00</option>
-                          <option value="10:00">10:00</option>
-                          <option value="11:00">11:00</option>
-                          <option value="12:00">12:00</option>
-                          <option value="13:00">13:00</option>
-                          <option value="14:00">14:00</option>
-                          <option value="15:00">15:00</option>
-                          <option value="16:00">16:00</option>
-                          <option value="17:00">17:00</option>
-                          <option value="18:00">18:00</option>
-                          <option value="19:00">19:00</option>
+                          <option value="">Önce tarih seçin</option>
                         </select>
-                      </div>
-                      <div>
-                        <label
-                          for="doctor"
-                          class="mb-2 block text-sm font-semibold text-gray-700"
-                        >
-                          Doktor Tercihi
-                        </label>
-                        <select
-                          id="doctor"
-                          name="doctor"
-                          class="w-full rounded-xl border border-gray-300 px-4 py-3 transition-colors focus:border-transparent focus:ring-2 focus:ring-sky-500"
-                        >
-                          <option value="">Doktor tercihi yok</option>
-                          <option value="dr-ayse-demir">Dr. Ayşe Demir</option>
-                          <option value="dr-mehmet-kaya">Dr. Mehmet Kaya</option
+                        <p class="mt-2 text-sm text-gray-500">
+                          <span class="mr-4 inline-block"
+                            >🟢 Müsait saatler</span
                           >
-                          <option value="dr-zeynep-yilmaz"
-                            >Dr. Zeynep Yılmaz</option
-                          >
-                        </select>
+                          <span class="inline-block">🔴 Dolu saatler</span>
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -421,7 +400,7 @@ import BaseLayout from "../layouts/base-layout.astro";
                   Hayvanınızın durumu acil ise direkt arayın
                 </p>
                 <a
-                  href="tel:+905551234567"
+                  href="tel:+905386944455"
                   class="flex items-center justify-center rounded-xl bg-white px-4 py-3 font-bold text-red-600 transition-colors hover:bg-gray-100"
                 >
                   <svg
@@ -519,12 +498,269 @@ import BaseLayout from "../layouts/base-layout.astro";
       </div>
     </section>
   </main>
-
-  <script>
-    function appointmentForm() {
-      return {
-        // Form validation and submission logic can be added here
-      };
-    }
-  </script>
 </BaseLayout>
+
+<script
+  define:vars={{
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+    supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  }}
+>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("appointment-form");
+    const dateInput = document.getElementById("preferredDate");
+    const timeSelect = document.getElementById("preferredTime");
+
+    // 30 dakika arayla saat seçenekleri oluştur
+    function generateTimeSlots() {
+      const slots = [];
+      const start = 9; // 09:00
+      const end = 21; // 21:00 (son randevu 20:30)
+
+      for (let hour = start; hour < end; hour++) {
+        // Tam saat
+        slots.push(`${hour.toString().padStart(2, "0")}:00`);
+        // Yarım saat
+        slots.push(`${hour.toString().padStart(2, "0")}:30`);
+      }
+
+      return slots;
+    }
+
+    // Müsait saatleri yükle
+    async function loadAvailableHours() {
+      const selectedDate = dateInput.value;
+
+      console.log("loadAvailableHours çağrıldı, seçilen tarih:", selectedDate);
+
+      if (!selectedDate) {
+        timeSelect.innerHTML = '<option value="">Önce tarih seçin</option>';
+        return;
+      }
+
+      // Loading state
+      timeSelect.innerHTML =
+        '<option value="">Müsait saatler yükleniyor...</option>';
+      timeSelect.disabled = true;
+
+      console.log("Müsait saatler yükleniyor...", selectedDate);
+
+      try {
+        // Supabase client oluştur
+        const { createClient } = await import(
+          "https://esm.sh/@supabase/supabase-js@2"
+        );
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // O tarihte alınmış randevuları getir (pending ve confirmed)
+        const { data: bookedAppointments, error } = await supabase
+          .from("appointments")
+          .select("preferred_time")
+          .eq("preferred_date", selectedDate)
+          .in("status", ["pending", "confirmed"]);
+
+        if (error) {
+          console.error("Randevu sorgulama hatası:", error);
+          timeSelect.innerHTML =
+            '<option value="">Hata oluştu, tekrar deneyin</option>';
+          return;
+        }
+
+        console.log("Dolu randevular:", bookedAppointments);
+
+        // Dolu saatleri array'e çevir
+        const bookedTimes = bookedAppointments
+          .map((apt) => apt.preferred_time)
+          .filter(Boolean);
+
+        // Tüm saat slotlarını oluştur
+        const allTimeSlots = generateTimeSlots();
+
+        // Dropdown'ı temizle
+        timeSelect.innerHTML = '<option value="">Saat seçin</option>';
+
+        // Müsait saatleri ekle
+        allTimeSlots.forEach((time) => {
+          const option = document.createElement("option");
+          option.value = time;
+
+          const isAvailable = !bookedTimes.includes(time);
+          if (isAvailable) {
+            option.textContent = time;
+            option.disabled = false;
+          } else {
+            option.textContent = `${time} (Dolu)`;
+            option.disabled = true;
+          }
+
+          timeSelect.appendChild(option);
+        });
+
+        console.log("Müsait saatler güncellendi. Dolu saatler:", bookedTimes);
+      } catch (error) {
+        console.error("Saat yükleme hatası:", error);
+        timeSelect.innerHTML =
+          '<option value="">Hata oluştu, tekrar deneyin</option>';
+      } finally {
+        timeSelect.disabled = false;
+      }
+    }
+
+    // Tarih değiştiğinde saatleri yükle
+    if (dateInput) {
+      dateInput.addEventListener("change", loadAvailableHours);
+    }
+
+    // Form submit handler
+    if (form) {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+
+        // Loading state
+        submitButton.textContent = "Gönderiliyor...";
+        submitButton.disabled = true;
+
+        try {
+          console.log("Randevu formu submit başladı...");
+
+          const formData = new FormData(form);
+
+          // Form verilerini kontrol et
+          const formValues = {
+            ownerName: formData.get("ownerName"),
+            phone: formData.get("phone"),
+            email: formData.get("email"),
+            address: formData.get("address"),
+            petName: formData.get("petName"),
+            petType: formData.get("petType"),
+            petBreed: formData.get("petBreed"),
+            petAge: formData.get("petAge"),
+            service: formData.get("service"),
+            preferredDate: formData.get("preferredDate"),
+            preferredTime: formData.get("preferredTime"),
+            notes: formData.get("notes"),
+            privacy: formData.get("privacy"),
+          };
+
+          console.log("Randevu form verileri:", formValues);
+
+          // Zorunlu alanları kontrol et
+          if (
+            !formValues.ownerName ||
+            !formValues.phone ||
+            !formValues.email ||
+            !formValues.petName ||
+            !formValues.petType ||
+            !formValues.service ||
+            !formValues.preferredDate ||
+            !formValues.preferredTime ||
+            !formValues.privacy
+          ) {
+            alert(
+              "Lütfen tüm zorunlu alanları doldurun ve gizlilik politikasını kabul edin.",
+            );
+            return;
+          }
+
+          // Environment variables'ları kontrol et
+          console.log("Environment variables:", {
+            url: supabaseUrl ? "Mevcut" : "Yok",
+            key: supabaseKey ? "Mevcut" : "Yok",
+          });
+
+          if (!supabaseUrl || !supabaseKey) {
+            console.error("Supabase environment variables eksik!");
+            alert(
+              "Konfigürasyon hatası. Lütfen sistem yöneticisi ile iletişime geçin.",
+            );
+            return;
+          }
+
+          console.log("Supabase client oluşturuluyor...");
+          // Supabase client'ı doğrudan burada oluştur
+          const { createClient } = await import(
+            "https://esm.sh/@supabase/supabase-js@2"
+          );
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          console.log("Supabase client başarıyla oluşturuldu");
+
+          // ÖNEMLİ: Son dakika çakışma kontrolü
+          console.log("Çakışma kontrolü yapılıyor...");
+          const { data: conflictCheck, error: conflictError } = await supabase
+            .from("appointments")
+            .select("id")
+            .eq("preferred_date", formValues.preferredDate)
+            .eq("preferred_time", formValues.preferredTime)
+            .in("status", ["pending", "confirmed"]);
+
+          if (conflictError) {
+            console.error("Çakışma kontrolü hatası:", conflictError);
+            alert("Randevu kontrolü yapılamadı. Lütfen tekrar deneyin.");
+            return;
+          }
+
+          if (conflictCheck && conflictCheck.length > 0) {
+            console.log("Çakışma tespit edildi:", conflictCheck);
+            alert(
+              "Bu saat artık dolu! Lütfen başka bir saat seçin ve tekrar deneyin.",
+            );
+            // Saatleri yenile
+            await loadAvailableHours();
+            return;
+          }
+
+          console.log("Çakışma yok, randevu oluşturuluyor...");
+
+          const insertData = {
+            owner_name: formValues.ownerName,
+            phone: formValues.phone,
+            email: formValues.email,
+            address: formValues.address || null,
+            pet_name: formValues.petName,
+            pet_type: formValues.petType,
+            pet_breed: formValues.petBreed || null,
+            pet_age: formValues.petAge || null,
+            service: formValues.service,
+            preferred_date: formValues.preferredDate,
+            preferred_time: formValues.preferredTime,
+            notes: formValues.notes || null,
+            privacy_accepted: formValues.privacy === "on",
+            status: "pending",
+          };
+
+          console.log("Veritabanına gönderilecek randevu verisi:", insertData);
+
+          const { data, error } = await supabase
+            .from("appointments")
+            .insert([insertData]);
+
+          console.log("Supabase randevu yanıtı:", { data, error });
+
+          if (error) {
+            console.error("Supabase randevu hatası:", error);
+            alert(`Veritabanı hatası: ${error.message}`);
+          } else {
+            console.log("Randevu başarıyla gönderildi!");
+            alert(
+              "Randevu talebiniz başarıyla gönderildi. En kısa sürede size dönüş yapacağız ve randevunuzu onaylayacağız.",
+            );
+            form.reset();
+            // Saatleri yenile
+            timeSelect.innerHTML = '<option value="">Önce tarih seçin</option>';
+          }
+        } catch (err) {
+          console.error("Beklenmeyen hata:", err);
+          console.error("Hata detayı:", JSON.stringify(err, null, 2));
+          alert("Bir hata oluştu. Konsolu kontrol edin ve tekrar deneyin.");
+        } finally {
+          // Reset button state
+          submitButton.textContent = originalText;
+          submitButton.disabled = false;
+        }
+      });
+    }
+  });
+</script>

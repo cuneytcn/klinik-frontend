@@ -1,5 +1,9 @@
 ---
 import BaseLayout from "../layouts/base-layout.astro";
+
+// Environment variables'ları server-side'da al
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 ---
 
 <BaseLayout
@@ -226,7 +230,7 @@ import BaseLayout from "../layouts/base-layout.astro";
           <div class="rounded-3xl bg-white p-8 shadow-lg">
             <h2 class="mb-8 text-3xl font-bold text-gray-900">Bize Yazın</h2>
 
-            <form class="space-y-6">
+            <form id="contact-form" class="space-y-6">
               <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label
@@ -408,3 +412,119 @@ import BaseLayout from "../layouts/base-layout.astro";
     </section>
   </main>
 </BaseLayout>
+
+<script
+  define:vars={{
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+    supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  }}
+>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("contact-form");
+    if (form) {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+
+        // Loading state
+        submitButton.textContent = "Gönderiliyor...";
+        submitButton.disabled = true;
+
+        try {
+          console.log("Form submit başladı...");
+
+          const formData = new FormData(form);
+
+          // Form verilerini kontrol et
+          const formValues = {
+            firstName: formData.get("firstName"),
+            lastName: formData.get("lastName"),
+            email: formData.get("email"),
+            phone: formData.get("phone"),
+            subject: formData.get("subject"),
+            message: formData.get("message"),
+            privacy: formData.get("privacy"),
+          };
+
+          console.log("Form verileri:", formValues);
+
+          // Zorunlu alanları kontrol et
+          if (
+            !formValues.firstName ||
+            !formValues.lastName ||
+            !formValues.email ||
+            !formValues.subject ||
+            !formValues.message ||
+            !formValues.privacy
+          ) {
+            alert(
+              "Lütfen tüm zorunlu alanları doldurun ve gizlilik politikasını kabul edin.",
+            );
+            return;
+          }
+
+          // Environment variables'ları kontrol et (artık define:vars ile geliyor)
+          console.log("Environment variables:", {
+            url: supabaseUrl ? "Mevcut" : "Yok",
+            key: supabaseKey ? "Mevcut" : "Yok",
+          });
+
+          if (!supabaseUrl || !supabaseKey) {
+            console.error("Supabase environment variables eksik!");
+            alert(
+              "Konfigürasyon hatası. Lütfen sistem yöneticisi ile iletişime geçin.",
+            );
+            return;
+          }
+
+          console.log("Supabase client oluşturuluyor...");
+          // Supabase client'ı doğrudan burada oluştur
+          const { createClient } = await import(
+            "https://esm.sh/@supabase/supabase-js@2"
+          );
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          console.log("Supabase client başarıyla oluşturuldu");
+
+          const insertData = {
+            first_name: formValues.firstName,
+            last_name: formValues.lastName,
+            email: formValues.email,
+            phone: formValues.phone || null,
+            subject: formValues.subject,
+            message: formValues.message,
+            privacy_accepted: formValues.privacy === "on",
+          };
+
+          console.log("Veritabanına gönderilecek veri:", insertData);
+
+          const { data, error } = await supabase
+            .from("contacts")
+            .insert([insertData]);
+
+          console.log("Supabase yanıtı:", { data, error });
+
+          if (error) {
+            console.error("Supabase hatası:", error);
+            alert(`Veritabanı hatası: ${error.message}`);
+          } else {
+            console.log("Form başarıyla gönderildi!");
+            alert(
+              "İletişim formunuz başarıyla gönderildi. En kısa sürede size dönüş yapacağız.",
+            );
+            form.reset();
+          }
+        } catch (err) {
+          console.error("Beklenmeyen hata:", err);
+          console.error("Hata detayı:", JSON.stringify(err, null, 2));
+          alert("Bir hata oluştu. Konsolu kontrol edin ve tekrar deneyin.");
+        } finally {
+          // Reset button state
+          submitButton.textContent = originalText;
+          submitButton.disabled = false;
+        }
+      });
+    }
+  });
+</script>
