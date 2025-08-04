@@ -21,4 +21,8 @@
   body {
     @apply font-primary flex min-h-dvh w-full flex-col items-center justify-between antialiased;
   }
+
+  button {
+    @apply cursor-pointer;
+  }
 }

@@ -1,0 +1,995 @@
+---
+import AdminLayout from "../layouts/admin-layout.astro";
+
+// Environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Supabase environment variables are not configured");
+}
+---
+
+<AdminLayout
+  title="Admin Paneli - Kıymet Veteriner Kliniği"
+  description="Kıymet Veteriner Kliniği admin yönetim paneli"
+  keywords="admin, panel, veteriner, yönetim"
+>
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <img src="/image.png" alt="Logo" class="h-12 w-12 rounded-full" />
+          <div class="ml-4">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+              Panel
+            </h1>
+            <p class="text-sm text-gray-600">Kıymet Veteriner Kliniği</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span id="userEmail" class="text-sm font-medium text-gray-700"></span>
+          <button
+            id="refreshBtn"
+            class="hidden items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+          >
+            <svg
+              class="mr-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+            Yenile
+          </button>
+          <button
+            id="logoutBtn"
+            class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+          >
+            <svg
+              class="mr-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              ></path>
+            </svg>
+            Çıkış
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Stats Grid -->
+    <div class="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Randevu Kartı -->
+      <div
+        class="relative overflow-hidden rounded-lg bg-white px-4 pt-5 pb-12 shadow sm:px-6 sm:pt-6"
+      >
+        <dt>
+          <div class="absolute rounded-md bg-blue-500 p-3">
+            <svg
+              class="h-6 w-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+          </div>
+          <p class="ml-16 truncate text-sm font-medium text-gray-500">
+            Toplam Randevu
+          </p>
+        </dt>
+        <dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+          <p
+            id="randevuTotalCount"
+            class="text-2xl font-semibold text-gray-900"
+          >
+            Yükleniyor...
+          </p>
+        </dd>
+      </div>
+
+      <!-- İletişim Kartı -->
+      <div
+        class="relative overflow-hidden rounded-lg bg-white px-4 pt-5 pb-12 shadow sm:px-6 sm:pt-6"
+      >
+        <dt>
+          <div class="absolute rounded-md bg-green-500 p-3">
+            <svg
+              class="h-6 w-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path>
+            </svg>
+          </div>
+          <p class="ml-16 truncate text-sm font-medium text-gray-500">
+            İletişim Mesajı
+          </p>
+        </dt>
+        <dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+          <p
+            id="iletisimTotalCount"
+            class="text-2xl font-semibold text-gray-900"
+          >
+            Yükleniyor...
+          </p>
+        </dd>
+      </div>
+
+      <!-- Bugünkü Randevular -->
+      <div
+        class="relative overflow-hidden rounded-lg bg-white px-4 pt-5 pb-12 shadow sm:px-6 sm:pt-6"
+      >
+        <dt>
+          <div class="absolute rounded-md bg-yellow-500 p-3">
+            <svg
+              class="h-6 w-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <p class="ml-16 truncate text-sm font-medium text-gray-500">Bugün</p>
+        </dt>
+        <dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+          <p id="todayCount" class="text-2xl font-semibold text-gray-900">
+            Yükleniyor...
+          </p>
+        </dd>
+      </div>
+
+      <!-- Bu Hafta -->
+      <div
+        class="relative overflow-hidden rounded-lg bg-white px-4 pt-5 pb-12 shadow sm:px-6 sm:pt-6"
+      >
+        <dt>
+          <div class="absolute rounded-md bg-purple-500 p-3">
+            <svg
+              class="h-6 w-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              ></path>
+            </svg>
+          </div>
+          <p class="ml-16 truncate text-sm font-medium text-gray-500">
+            Bu Hafta
+          </p>
+        </dt>
+        <dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+          <p id="weekCount" class="text-2xl font-semibold text-gray-900">
+            Yükleniyor...
+          </p>
+        </dd>
+      </div>
+    </div>
+
+    <!-- Data Tables with Tabs -->
+    <div class="rounded-lg bg-white shadow">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex" aria-label="Tabs">
+          <button
+            id="randevuTab"
+            class="tab-button w-1/3 border-b-2 border-blue-500 px-6 py-4 text-center text-sm font-medium text-blue-600 focus:outline-none"
+            onclick="switchTab('randevu')"
+          >
+            <svg
+              class="mr-2 inline h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+            Randevular
+          </button>
+          <button
+            id="iletisimTab"
+            class="tab-button w-1/3 border-b-2 border-transparent px-6 py-4 text-center text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:outline-none"
+            onclick="switchTab('iletisim')"
+          >
+            <svg
+              class="mr-2 inline h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path>
+            </svg>
+            İletişim Mesajları
+          </button>
+          <button
+            id="ayarlarTab"
+            class="tab-button w-1/3 border-b-2 border-transparent px-6 py-4 text-center text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 focus:outline-none"
+            onclick="switchTab('ayarlar')"
+          >
+            <svg
+              class="mr-2 inline h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Site Ayarları
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="p-6">
+        <!-- Randevu Tab Content -->
+        <div id="randevuTabContent" class="tab-content">
+          <div class="mb-6 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Son Randevular</h3>
+            <div class="flex space-x-2">
+              <select
+                id="randevuFilter"
+                onchange="filterRandevuData()"
+                class="rounded-md border border-gray-300 px-3 py-1 text-sm"
+              >
+                <option value="all">Tüm Durumlar</option>
+                <option value="pending">Bekleyen</option>
+                <option value="confirmed">Onaylanmış</option>
+                <option value="completed">Tamamlanmış</option>
+                <option value="cancelled">İptal Edilmiş</option>
+              </select>
+              <button
+                onclick="loadRandevuData()"
+                class="hidden rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+              >
+                Yenile
+              </button>
+            </div>
+          </div>
+          <div id="randevuList" class="space-y-4">
+            <div class="py-8 text-center text-gray-500">
+              Veriler yükleniyor...
+            </div>
+          </div>
+        </div>
+
+        <!-- İletişim Tab Content -->
+        <div id="iletisimTabContent" class="tab-content hidden">
+          <div class="mb-6 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">
+              Son İletişim Mesajları
+            </h3>
+            <button
+              onclick="loadIletisimData()"
+              class="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+            >
+              Yenile
+            </button>
+          </div>
+          <div id="iletisimList" class="space-y-4">
+            <div class="py-8 text-center text-gray-500">
+              Veriler yükleniyor...
+            </div>
+          </div>
+        </div>
+
+        <!-- Site Ayarları Tab Content -->
+        <div id="ayarlarTabContent" class="tab-content hidden">
+          <div class="mb-6 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Site Ayarları</h3>
+            <button
+              onclick="loadSiteSettings()"
+              class="rounded-md bg-purple-600 px-3 py-1 text-sm text-white hover:bg-purple-700"
+            >
+              Yenile
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- İletişim Bilgileri -->
+            <div class="rounded-lg bg-gray-50 p-6">
+              <h4 class="text-md mb-4 font-medium text-gray-900">
+                İletişim Bilgileri
+              </h4>
+              <div id="contactSettings" class="space-y-4">
+                <div class="py-8 text-center text-gray-500">
+                  Veriler yükleniyor...
+                </div>
+              </div>
+            </div>
+
+            <!-- Genel Ayarlar -->
+            <div class="rounded-lg bg-gray-50 p-6">
+              <h4 class="text-md mb-4 font-medium text-gray-900">
+                Genel Ayarlar
+              </h4>
+              <div id="generalSettings" class="space-y-4">
+                <div class="py-8 text-center text-gray-500">
+                  Veriler yükleniyor...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</AdminLayout>
+
+<script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+  // Auth kontrolü
+  function checkAuth() {
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    const userEmail = localStorage.getItem("userEmail");
+
+    if (!isLoggedIn || isLoggedIn !== "true") {
+      window.location.href = "/panel-giris";
+      return false;
+    }
+
+    const userEmailElement = document.getElementById("userEmail");
+    if (userEmailElement && userEmail) {
+      userEmailElement.textContent = userEmail;
+    }
+    return true;
+  }
+
+  // Supabase client
+  let supabaseClient = null;
+
+  async function getSupabase() {
+    if (!supabaseClient) {
+      const { createClient } = await import(
+        "https://cdn.skypack.dev/@supabase/supabase-js"
+      );
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    }
+    return supabaseClient;
+  }
+
+  // Tab sistemi
+  window.switchTab = function (tabName) {
+    const randevuTab = document.getElementById("randevuTab");
+    const iletisimTab = document.getElementById("iletisimTab");
+    const ayarlarTab = document.getElementById("ayarlarTab");
+    const randevuContent = document.getElementById("randevuTabContent");
+    const iletisimContent = document.getElementById("iletisimTabContent");
+    const ayarlarContent = document.getElementById("ayarlarTabContent");
+
+    // Tüm tab'ları pasif yap
+    randevuTab.className =
+      "tab-button w-1/3 py-4 px-6 text-center border-b-2 font-medium text-sm focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+    iletisimTab.className =
+      "tab-button w-1/3 py-4 px-6 text-center border-b-2 font-medium text-sm focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+    ayarlarTab.className =
+      "tab-button w-1/3 py-4 px-6 text-center border-b-2 font-medium text-sm focus:outline-none border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+
+    randevuContent.classList.add("hidden");
+    iletisimContent.classList.add("hidden");
+    ayarlarContent.classList.add("hidden");
+
+    if (tabName === "randevu") {
+      randevuTab.className =
+        "tab-button w-1/3 py-4 px-6 text-center border-b-2 font-medium text-sm focus:outline-none border-blue-500 text-blue-600";
+      randevuContent.classList.remove("hidden");
+    } else if (tabName === "iletisim") {
+      iletisimTab.className =
+        "tab-button w-1/3 py-4 px-6 text-center border-b-2 font-medium text-sm focus:outline-none border-green-500 text-green-600";
+      iletisimContent.classList.remove("hidden");
+    } else if (tabName === "ayarlar") {
+      ayarlarTab.className =
+        "tab-button w-1/3 py-4 px-6 text-center border-b-2 font-medium text-sm focus:outline-none border-purple-500 text-purple-600";
+      ayarlarContent.classList.remove("hidden");
+      loadSiteSettings(); // Ayarlar açıldığında verileri yükle
+    }
+  };
+
+  // Randevu silme
+  window.deleteRandevu = async function (id) {
+    if (!confirm("Bu randevuyu silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+
+    try {
+      const supabase = await getSupabase();
+      const { error } = await supabase
+        .from("appointments")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        alert("Randevu silinirken hata oluştu: " + error.message);
+        console.error("Silme hatası:", error);
+      } else {
+        alert("Randevu başarıyla silindi!");
+        await loadRandevuData();
+      }
+    } catch (error) {
+      console.error("Beklenmeyen hata:", error);
+      alert("Beklenmeyen bir hata oluştu.");
+    }
+  };
+
+  // Randevu silme handler'ı
+  window.handleDeleteRandevu = function (buttonElement) {
+    const id = buttonElement.getAttribute("data-id");
+    deleteRandevu(id); // ID'yi string olarak gönder
+  };
+
+  // İletişim mesajı silme
+  window.deleteIletisim = async function (id) {
+    if (!confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+
+    try {
+      const supabase = await getSupabase();
+      const { error } = await supabase.from("contacts").delete().eq("id", id);
+
+      if (error) {
+        alert("Mesaj silinirken hata oluştu: " + error.message);
+        console.error("Silme hatası:", error);
+      } else {
+        alert("Mesaj başarıyla silindi!");
+        await loadIletisimData();
+      }
+    } catch (error) {
+      console.error("Beklenmeyen hata:", error);
+      alert("Beklenmeyen bir hata oluştu.");
+    }
+  };
+
+  // İletişim silme handler'ı
+  window.handleDeleteIletisim = function (buttonElement) {
+    const id = buttonElement.getAttribute("data-id");
+    deleteIletisim(id); // ID'yi string olarak gönder
+  };
+
+  // Randevu durumu güncelleme
+  window.updateRandevuStatus = async function (id, newStatus) {
+    try {
+      const supabase = await getSupabase();
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+      if (error) {
+        alert("Durum güncellenirken hata oluştu: " + error.message);
+        console.error("Güncelleme hatası:", error);
+      } else {
+        alert("Randevu durumu güncellendi!");
+        await loadRandevuData();
+      }
+    } catch (error) {
+      console.error("Beklenmeyen hata:", error);
+      alert("Beklenmeyen bir hata oluştu.");
+    }
+  };
+
+  // Select değişiklik handler'ı
+  window.handleStatusChange = function (selectElement) {
+    const id = selectElement.getAttribute("data-id");
+    const newStatus = selectElement.value;
+    updateRandevuStatus(id, newStatus); // ID'yi string olarak gönder
+  };
+
+  // Tarih formatları
+  function formatDate(date) {
+    return new Date(date).toLocaleDateString("tr-TR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  function formatDateTime(date) {
+    return new Date(date).toLocaleString("tr-TR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  // Durum renkleri
+  function getStatusColor(status) {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  }
+
+  // Durum metinleri
+  function getStatusText(status) {
+    switch (status) {
+      case "confirmed":
+        return "Onaylandı";
+      case "pending":
+        return "Bekliyor";
+      case "completed":
+        return "Tamamlandı";
+      case "cancelled":
+        return "İptal Edildi";
+      default:
+        return "Bilinmiyor";
+    }
+  }
+
+  // Randevu verilerini yükle
+  async function loadRandevuData() {
+    try {
+      const supabase = await getSupabase();
+      console.log("Randevu verileri yükleniyor...");
+
+      // Toplam randevu sayısı
+      const {
+        data: countData,
+        error: countError,
+        count: totalCount,
+      } = await supabase
+        .from("appointments")
+        .select("*", { count: "exact", head: true });
+
+      console.log("Randevu count sonucu:", { totalCount, countError });
+
+      if (countError) {
+        console.error("Randevu sayma hatası:", countError);
+        document.getElementById("randevuTotalCount").textContent =
+          "Hata: " + countError.message;
+      } else {
+        document.getElementById("randevuTotalCount").textContent =
+          totalCount || 0;
+      }
+
+      // Bugünkü randevular
+      const today = new Date().toISOString().split("T")[0];
+      const { count: todayCount, error: todayError } = await supabase
+        .from("appointments")
+        .select("*", { count: "exact", head: true })
+        .eq("preferred_date", today);
+
+      if (todayError) {
+        console.error("Bugünkü randevu hatası:", todayError);
+        document.getElementById("todayCount").textContent = "Hata";
+      } else {
+        document.getElementById("todayCount").textContent = todayCount || 0;
+      }
+
+      // Bu haftaki randevular
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      const { count: weekCount, error: weekError } = await supabase
+        .from("appointments")
+        .select("*", { count: "exact", head: true })
+        .gte("preferred_date", startOfWeek.toISOString().split("T")[0])
+        .lte("preferred_date", endOfWeek.toISOString().split("T")[0]);
+
+      if (weekError) {
+        console.error("Haftalık randevu hatası:", weekError);
+        document.getElementById("weekCount").textContent = "Hata";
+      } else {
+        document.getElementById("weekCount").textContent = weekCount || 0;
+      }
+
+      // Son randevular
+      const { data: recentData, error: dataError } = await supabase
+        .from("appointments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      console.log("Son randevular sonucu:", {
+        dataLength: recentData?.length,
+        dataError,
+      });
+
+      if (dataError) {
+        console.error("Randevu veri hatası:", dataError);
+        document.getElementById("randevuList").innerHTML =
+          `<div class="text-red-500 text-center py-4">Veriler yüklenemedi: ${dataError.message}</div>`;
+      } else {
+        window.allRandevuData = recentData || [];
+        filterRandevuData(); // Filtreleme uygula
+      }
+    } catch (error) {
+      console.error("Randevu verileri yüklenirken hata:", error);
+      document.getElementById("randevuTotalCount").textContent = "Hata";
+      document.getElementById("randevuList").innerHTML =
+        `<div class="text-red-500 text-center py-4">Veriler yüklenemedi: ${error.message}</div>`;
+    }
+  }
+
+  // İletişim verilerini yükle
+  async function loadIletisimData() {
+    try {
+      const supabase = await getSupabase();
+      console.log("İletişim verileri yükleniyor...");
+
+      // Toplam mesaj sayısı
+      const {
+        data: countData,
+        error: countError,
+        count: totalCount,
+      } = await supabase
+        .from("contacts")
+        .select("*", { count: "exact", head: true });
+
+      console.log("İletişim count sonucu:", { totalCount, countError });
+
+      if (countError) {
+        console.error("İletişim sayma hatası:", countError);
+        document.getElementById("iletisimTotalCount").textContent =
+          "Hata: " + countError.message;
+      } else {
+        document.getElementById("iletisimTotalCount").textContent =
+          totalCount || 0;
+      }
+
+      // Son 10 mesaj
+      const { data: recentData, error: dataError } = await supabase
+        .from("contacts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      console.log("Son iletişim mesajları sonucu:", {
+        dataLength: recentData?.length,
+        dataError,
+      });
+
+      const iletisimList = document.getElementById("iletisimList");
+      if (dataError) {
+        console.error("İletişim listesi hatası:", dataError);
+        iletisimList.innerHTML = `<div class="text-red-500 text-center py-4">Veriler yüklenemedi: ${dataError.message}</div>`;
+      } else if (recentData && recentData.length > 0) {
+        iletisimList.innerHTML = recentData
+          .map((item) => {
+            const firstName = (item.first_name || "").replace(/'/g, "&apos;");
+            const lastName = (item.last_name || "").replace(/'/g, "&apos;");
+            const fullName =
+              (firstName + " " + lastName).trim() || "İsim belirtilmemiş";
+            const subject = item.subject
+              ? item.subject.replace(/'/g, "&apos;")
+              : "";
+            const message = item.message
+              ? item.message.replace(/'/g, "&apos;").replace(/"/g, "&quot;")
+              : "";
+
+            return `
+          <div class="border-l-4 border-green-400 bg-gray-50 p-4 rounded-r-lg">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">${fullName}</p>
+                <p class="text-sm text-gray-600">📧 ${item.email || "E-posta yok"}</p>
+                <p class="text-xs text-gray-500">📞 ${item.phone || "Telefon yok"}</p>
+                ${subject ? `<p class="text-xs font-medium text-gray-700 mt-1">Konu: ${subject}</p>` : ""}
+                ${message ? `<p class="text-xs text-gray-600 mt-2 bg-white p-2 rounded">${message}</p>` : ""}
+                <div class="mt-2">
+                  <button 
+                    type="button"
+                    class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                    data-id="${item.id}"
+                    onclick="handleDeleteIletisim(this)"
+                  >
+                    Sil
+                  </button>
+                </div>
+              </div>
+              <span class="text-xs text-gray-400 ml-2">${formatDateTime(item.created_at)}</span>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+      } else {
+        iletisimList.innerHTML =
+          '<div class="text-gray-500 text-center py-8">Henüz mesaj bulunmuyor</div>';
+      }
+    } catch (error) {
+      console.error("İletişim verileri yüklenirken hata:", error);
+      document.getElementById("iletisimTotalCount").textContent = "Hata";
+      document.getElementById("iletisimList").innerHTML =
+        `<div class="text-red-500 text-center py-4">Veriler yüklenemedi: ${error.message}</div>`;
+    }
+  }
+
+  // Randevu filtreleme
+  window.filterRandevuData = function () {
+    const filter = document.getElementById("randevuFilter").value;
+    let filteredData = window.allRandevuData || [];
+
+    if (filter !== "all") {
+      filteredData = filteredData.filter((item) => item.status === filter);
+    }
+
+    displayRandevuData(filteredData);
+  };
+
+  // Randevu verilerini göster
+  function displayRandevuData(data) {
+    console.log("Randevu verileri gösteriliyor:", {
+      dataLength: data?.length,
+    });
+
+    const randevuList = document.getElementById("randevuList");
+    if (data && data.length > 0) {
+      randevuList.innerHTML = data
+        .map((item) => {
+          const ownerName = (item.owner_name || "İsim belirtilmemiş").replace(
+            /'/g,
+            "&apos;",
+          );
+          const petName = (item.pet_name || "Hayvan adı").replace(
+            /'/g,
+            "&apos;",
+          );
+          const petType = (item.pet_type || "Tür").replace(/'/g, "&apos;");
+          const petBreed = item.pet_breed
+            ? item.pet_breed.replace(/'/g, "&apos;")
+            : "";
+          const service = (item.service || "Hizmet belirtilmemiş").replace(
+            /'/g,
+            "&apos;",
+          );
+          const notes = item.notes
+            ? item.notes.replace(/'/g, "&apos;").replace(/"/g, "&quot;")
+            : "";
+          const address = item.address
+            ? item.address.replace(/'/g, "&apos;")
+            : "";
+
+          return `
+        <div class="border-l-4 border-blue-400 bg-blue-50 p-4 rounded-r-lg">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-900">${ownerName}</p>
+              <p class="text-sm text-gray-600">${petName} - ${petType}</p>
+              ${petBreed ? `<p class="text-xs text-gray-500">Irk: ${petBreed}</p>` : ""}
+              ${item.pet_age ? `<p class="text-xs text-gray-500">Yaş: ${item.pet_age}</p>` : ""}
+              <p class="text-xs text-gray-500 mt-1">📞 ${item.phone || "Telefon yok"}</p>
+              <p class="text-xs text-gray-500">📧 ${item.email || "E-posta yok"}</p>
+              <p class="text-xs text-gray-500">🏥 ${service}</p>
+              <p class="text-xs text-gray-500">📅 ${item.preferred_date ? formatDate(item.preferred_date) : "Tarih yok"} ${item.preferred_time || ""}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="text-xs font-medium text-gray-700">Durum:</span>
+                <span class="px-2 py-1 rounded text-xs ${getStatusColor(item.status)}">${getStatusText(item.status)}</span>
+                <select 
+                  class="text-xs border border-gray-300 rounded px-1 py-0.5"
+                  data-id="${item.id}"
+                  onchange="handleStatusChange(this)"
+                >
+                  <option value="pending" ${item.status === "pending" ? "selected" : ""}>Bekleyen</option>
+                  <option value="confirmed" ${item.status === "confirmed" ? "selected" : ""}>Onaylandı</option>
+                  <option value="completed" ${item.status === "completed" ? "selected" : ""}>Tamamlandı</option>
+                  <option value="cancelled" ${item.status === "cancelled" ? "selected" : ""}>İptal</option>
+                </select>
+                <button 
+                  type="button"
+                  class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  data-id="${item.id}"
+                  onclick="handleDeleteRandevu(this)"
+                >
+                  Sil
+                </button>
+              </div>
+              ${notes ? `<p class="text-xs text-gray-600 mt-2 bg-white p-2 rounded">Not: ${notes}</p>` : ""}
+              ${address ? `<p class="text-xs text-gray-500">📍 ${address}</p>` : ""}
+            </div>
+            <span class="text-xs text-gray-400 ml-2">${formatDateTime(item.created_at)}</span>
+          </div>
+        </div>
+      `;
+        })
+        .join("");
+    } else {
+      randevuList.innerHTML =
+        '<div class="text-gray-500 text-center py-8">Henüz randevu kaydı bulunmuyor</div>';
+    }
+  }
+
+  // Tüm verileri yükle
+  async function loadAllData() {
+    console.log("Veriler yükleniyor...");
+    await Promise.all([loadRandevuData(), loadIletisimData()]);
+    console.log("Veriler yüklendi!");
+  }
+
+  // Site ayarlarını yükle
+  async function loadSiteSettings() {
+    try {
+      const supabase = await getSupabase();
+      console.log("Site ayarları yükleniyor...");
+
+      const { data: settings, error } = await supabase
+        .from("site_settings")
+        .select("*")
+        .order("category", { ascending: true });
+
+      if (error) {
+        console.error("Ayarlar yükleme hatası:", error);
+        document.getElementById("contactSettings").innerHTML =
+          `<div class="text-red-500 text-center py-4">Ayarlar yüklenemedi: ${error.message}</div>`;
+        return;
+      }
+
+      // İletişim ayarları
+      const contactSettings = settings.filter((s) => s.category === "contact");
+      const contactHTML = contactSettings
+        .map(
+          (setting) => `
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">${setting.label}</label>
+          ${
+            setting.key === "working_hours"
+              ? `<textarea 
+              id="setting_${setting.key}" 
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              rows="4"
+              placeholder="${setting.description || ""}"
+            >${setting.value}</textarea>`
+              : `<input 
+              type="text" 
+              id="setting_${setting.key}" 
+              value="${setting.value}" 
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              placeholder="${setting.description || ""}"
+            />`
+          }
+          <button 
+            onclick="updateSetting('${setting.key}')"
+            class="mt-2 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+          >
+            Güncelle
+          </button>
+        </div>
+      `,
+        )
+        .join("");
+
+      document.getElementById("contactSettings").innerHTML = contactHTML;
+
+      // Genel ayarları (şimdilik boş)
+      document.getElementById("generalSettings").innerHTML =
+        '<div class="text-gray-500 text-center py-4">Henüz genel ayar bulunmuyor</div>';
+    } catch (error) {
+      console.error("Site ayarları yüklenirken hata:", error);
+      document.getElementById("contactSettings").innerHTML =
+        `<div class="text-red-500 text-center py-4">Beklenmeyen hata: ${error.message}</div>`;
+    }
+  }
+
+  // Ayar güncelle
+  window.updateSetting = async function (key) {
+    try {
+      const supabase = await getSupabase();
+      const value = document.getElementById(`setting_${key}`).value;
+
+      if (!value.trim()) {
+        alert("Değer boş olamaz!");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("site_settings")
+        .update({
+          value: value,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("key", key);
+
+      if (error) {
+        alert("Güncelleme hatası: " + error.message);
+        console.error("Güncelleme hatası:", error);
+      } else {
+        alert("Ayar başarıyla güncellendi!");
+        console.log(`${key} ayarı güncellendi: ${value}`);
+      }
+    } catch (error) {
+      console.error("Beklenmeyen hata:", error);
+      alert("Beklenmeyen bir hata oluştu.");
+    }
+  };
+
+  // Çıkış
+  async function logout() {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userEmail");
+
+    try {
+      const supabase = await getSupabase();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.log("Supabase logout error:", err);
+    }
+
+    window.location.href = "/panel-giris";
+  }
+
+  // Sayfa hazırlandığında
+  document.addEventListener("DOMContentLoaded", async function () {
+    console.log("Panel başlatılıyor...");
+
+    // Auth kontrolü
+    if (!checkAuth()) return;
+
+    // Event listeners
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+    document
+      .getElementById("refreshBtn")
+      ?.addEventListener("click", loadAllData);
+
+    // İlk veri yüklemesi
+    await loadAllData();
+
+    console.log("Panel hazır!");
+  });
+</script>

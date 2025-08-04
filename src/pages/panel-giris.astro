@@ -1,5 +1,13 @@
 ---
 import AdminLayout from "../layouts/admin-layout.astro";
+
+// Server-side environment variables kontrolü
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Supabase environment variables are not configured");
+}
 ---
 
 <AdminLayout
@@ -36,42 +44,7 @@ import AdminLayout from "../layouts/admin-layout.astro";
       <div
         class="mt-8 rounded-lg border border-gray-100 bg-white px-6 py-8 shadow-xl"
       >
-        <form
-          id="loginForm"
-          class="space-y-6"
-          x-data="{
-            email: '',
-            password: '',
-            loading: false,
-            error: '',
-            async handleSubmit(e) {
-              e.preventDefault();
-              this.loading = true;
-              this.error = '';
-              
-              try {
-                const { supabase } = await import('../lib/supabase.ts');
-                const { data, error } = await supabase.auth.signInWithPassword({
-                  email: this.email,
-                  password: this.password,
-                });
-                
-                if (error) {
-                  this.error = 'Giriş bilgileri hatalı. Lütfen tekrar deneyin.';
-                  return;
-                }
-                
-                // Başarılı giriş - admin paneline yönlendir
-                window.location.href = '/admin';
-              } catch (err) {
-                this.error = 'Bir hata oluştu. Lütfen tekrar deneyin.';
-              } finally {
-                this.loading = false;
-              }
-            }
-          }"
-          @submit="handleSubmit"
-        >
+        <form id="loginForm" class="space-y-6">
           <!-- E-posta Alanı -->
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">
@@ -84,9 +57,8 @@ import AdminLayout from "../layouts/admin-layout.astro";
                 type="email"
                 autocomplete="email"
                 required
-                x-model="email"
                 class="relative block w-full appearance-none rounded-lg border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 transition-colors focus:z-10 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none sm:text-sm"
-                placeholder="admin@kiymetveteriner.com"
+                placeholder="email@example.com"
               />
               <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                 <svg
@@ -121,7 +93,6 @@ import AdminLayout from "../layouts/admin-layout.astro";
                 type="password"
                 autocomplete="current-password"
                 required
-                x-model="password"
                 class="relative block w-full appearance-none rounded-lg border border-gray-300 px-3 py-3 text-gray-900 placeholder-gray-500 transition-colors focus:z-10 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none sm:text-sm"
                 placeholder="••••••••"
               />
@@ -145,8 +116,8 @@ import AdminLayout from "../layouts/admin-layout.astro";
 
           <!-- Hata Mesajı -->
           <div
-            x-show="error"
-            x-text="error"
+            id="errorMessage"
+            style="display: none;"
             class="rounded-lg border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600"
           >
           </div>
@@ -155,11 +126,10 @@ import AdminLayout from "../layouts/admin-layout.astro";
           <div>
             <button
               type="submit"
-              :disabled="loading || !email || !password"
-              :class="loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700'"
-              class="group relative flex w-full justify-center rounded-lg border border-transparent px-4 py-3 text-sm font-medium text-white transition-all duration-200 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+              id="loginButton"
+              class="group relative flex w-full justify-center rounded-lg border border-transparent bg-sky-600 px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <span x-show="!loading" class="flex items-center">
+              <span id="buttonText" class="flex items-center">
                 <svg
                   class="mr-2 h-5 w-5"
                   fill="none"
@@ -175,7 +145,11 @@ import AdminLayout from "../layouts/admin-layout.astro";
                 </svg>
                 Giriş Yap
               </span>
-              <span x-show="loading" class="flex items-center">
+              <span
+                id="loadingText"
+                style="display: none;"
+                class="flex items-center"
+              >
                 <svg
                   class="mr-3 -ml-1 h-5 w-5 animate-spin text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -232,24 +206,105 @@ import AdminLayout from "../layouts/admin-layout.astro";
       </div>
     </div>
   </div>
-
-  <!-- JavaScript for auto-redirect if already logged in -->
-  <script>
-    import { supabase } from "../lib/supabase.ts";
-
-    // Sayfa yüklendiğinde oturum kontrolü yap
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // Zaten giriş yapılmışsa admin paneline yönlendir
-        window.location.href = "/admin";
-      }
-    });
-
-    // Oturum değişikliklerini dinle
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        window.location.href = "/admin";
-      }
-    });
-  </script>
 </AdminLayout>
+
+<script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+  // Eğer zaten giriş yapılmışsa panel sayfasına yönlendir
+  document.addEventListener("DOMContentLoaded", function () {
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    if (isLoggedIn === "true") {
+      window.location.href = "/panel";
+      return;
+    }
+
+    const form = document.getElementById("loginForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginButton = document.getElementById("loginButton");
+    const buttonText = document.getElementById("buttonText");
+    const loadingText = document.getElementById("loadingText");
+    const errorMessage = document.getElementById("errorMessage");
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = "block";
+    }
+
+    function hideError() {
+      errorMessage.style.display = "none";
+    }
+
+    function setLoading(loading) {
+      if (loading) {
+        loginButton.disabled = true;
+        buttonText.style.display = "none";
+        loadingText.style.display = "flex";
+        loginButton.classList.add("bg-gray-400", "cursor-not-allowed");
+        loginButton.classList.remove("bg-sky-600", "hover:bg-sky-700");
+      } else {
+        loginButton.disabled = false;
+        buttonText.style.display = "flex";
+        loadingText.style.display = "none";
+        loginButton.classList.remove("bg-gray-400", "cursor-not-allowed");
+        loginButton.classList.add("bg-sky-600", "hover:bg-sky-700");
+      }
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!email || !password) {
+        showError("Lütfen e-posta ve şifre alanlarını doldurun.");
+        return;
+      }
+
+      setLoading(true);
+      hideError();
+
+      try {
+        // Supabase CDN'den yükle
+        const { createClient } = await import(
+          "https://cdn.skypack.dev/@supabase/supabase-js"
+        );
+
+        // Environment variables Astro'dan geldi
+        console.log("Supabase URL:", supabaseUrl);
+        console.log("Supabase Key var mı:", !!supabaseAnonKey);
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+          throw new Error(
+            "Supabase konfigürasyonu eksik. Environment variables kontrol edin.",
+          );
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          showError("Giriş bilgileri hatalı. Lütfen tekrar deneyin.");
+          console.error("Giriş hatası:", error);
+          return;
+        }
+
+        // Başarılı giriş
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userEmail", email);
+
+        // Panel sayfasına yönlendir
+        window.location.href = "/panel";
+      } catch (err) {
+        console.error("Login error:", err);
+        showError("Bir hata oluştu: " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    });
+  });
+</script>
