@@ -117,9 +117,10 @@ import BaseLayout from "../layouts/base-layout.astro";
           </div>
 
           <!-- Hero Image -->
+
           <div class="relative">
             <div
-              class="relative z-10 rotate-3 transform rounded-3xl bg-white p-8 shadow-2xl transition-transform duration-500 hover:rotate-0"
+              class="relative z-10 transform rounded-3xl bg-white p-8 shadow-2xl transition-transform duration-500 hover:rotate-0 md:rotate-3"
             >
               <img
                 src="https://images.unsplash.com/photo-1551717743-49959800b1f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
@@ -127,7 +128,7 @@ import BaseLayout from "../layouts/base-layout.astro";
                 class="h-96 w-full rounded-2xl object-cover"
               />
               <div
-                class="absolute -top-4 -right-4 rounded-2xl bg-sky-500 p-4 text-white shadow-lg"
+                class="absolute top-0 right-0 rounded-2xl bg-sky-500 p-4 text-white shadow-lg md:-top-4 md:-right-4"
               >
                 <svg
                   class="h-8 w-8"
@@ -145,7 +146,7 @@ import BaseLayout from "../layouts/base-layout.astro";
               </div>
             </div>
             <div
-              class="absolute inset-0 -rotate-6 transform rounded-3xl bg-gradient-to-r from-sky-400 to-blue-500 opacity-20"
+              class="absolute inset-0 transform rounded-3xl bg-gradient-to-r from-sky-400 to-blue-500 opacity-20 md:-rotate-6"
             >
             </div>
           </div>
